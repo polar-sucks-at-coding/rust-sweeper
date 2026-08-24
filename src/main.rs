@@ -2,7 +2,7 @@ use rand::Rng;
 
 const ROWS: u32 = 5;
 const COLUMNS: u32 = 5;
-const CONCEALED_TILE_SYMBOL: char = '*';
+const CONCEALED_TILE_SYMBOL: char = 'c';
 
 struct Tile{
     position: (u32, u32), //row first
@@ -49,10 +49,10 @@ fn create_tiles() -> Vec<Tile>{
 
 }
 
-fn print_tiles(tiles: Vec<Tile>){
+fn print_tiles(tiles: &Vec<Tile>){
     let mut column = 0;
     for i in tiles{
-        if column == COLUMNS {
+        if column >= COLUMNS {
             print!("\n");
             column = 0;
         }
@@ -65,11 +65,29 @@ fn print_tiles(tiles: Vec<Tile>){
 
         column += 1;
     }
+    print!("\n");
+}
+
+
+fn get_input() -> String{
+    let mut input = String::new();
+
+    std::io::stdin().read_line(&mut input).expect("Failed to read line");
+
+    let trimmed = String::from(input.trim());
+
+    trimmed
 }
 fn main() {
+    clearscreen::clear().expect("Failed to clear screen");
     let tiles = create_tiles();
+    loop{
+        print_tiles(&tiles);
 
-    print_tiles(tiles);
+        let input = get_input();
+        clearscreen::clear().expect("Failed to clear screen");
+    }
+
 
     print!("\n");
 }
