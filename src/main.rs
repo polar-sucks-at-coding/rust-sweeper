@@ -153,7 +153,6 @@ fn main() {
 
         match get_input(&mut window){
             Some(InputType::Character(c)) => {
-                //moving to where input will be echoed
                 str_for_debugging = c.to_string();
             }
 
