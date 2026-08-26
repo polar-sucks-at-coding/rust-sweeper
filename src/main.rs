@@ -1,13 +1,14 @@
 extern crate pancurses;
 
-use pancurses::{initscr, endwin, Window, Input, ALL_MOUSE_EVENTS, getmouse, mousemask};
+use pancurses::{ALL_MOUSE_EVENTS, Input::{self, KeyReference}, Window, endwin, getmouse, initscr, mousemask};
 use rand::Rng;
 
-const ROWS: i32 = 5;
-const COLUMNS: i32 = 5;
+const ROWS: usize = 5;
+const COLUMNS: usize = 5;
 const CONCEALED_TILE_SYMBOL: char = 'c';
 const BOMB_TILE_SYMBOL: char = 'b';
 const EMPTY_TILE_SYMBOL: char = 'e';
+const DEBUG_COORDINATES: (u32, u32) = (0, 30);
 
 enum TileType{
     Bomb,
@@ -19,7 +20,7 @@ enum TileClickResult{
     Safe
 }
 struct Tile{
-    position: (i32, i32), // row/y first
+    position: (usize, usize), // row/y first
     tile_type: TileType,
     concealed: bool
 
@@ -44,8 +45,8 @@ impl Tile{
 fn create_tiles() -> Vec<Tile>{
     let mut v: Vec<Tile> = Vec::new();
 
-    let mut row: i32 = 0;
-    let mut column: i32 = 0;
+    let mut row: usize = 0;
+    let mut column: usize = 0;
     loop{
         let mut tile = Tile{
             position: (row, column),
@@ -75,9 +76,9 @@ fn create_tiles() -> Vec<Tile>{
 
 }
 
-fn print_tiles(tiles: &Vec<Tile>, window: &mut Window, y_offset: &i32, x_offset: &i32){
+fn print_tiles(tiles: &Vec<Tile>, window: &mut Window, y_offset: i32, x_offset: i32){
     for i in tiles{
-        window.mv(i.position.0 + y_offset, i.position.1 + x_offset);
+        window.mv(i.position.0 as i32 + y_offset, i.position.1 as i32 + x_offset);
 
         if i.concealed{
             window.addch(CONCEALED_TILE_SYMBOL);
@@ -88,15 +89,15 @@ fn print_tiles(tiles: &Vec<Tile>, window: &mut Window, y_offset: &i32, x_offset:
     }
 }
 
-fn print_tile_coordinates(window: &mut Window, y_offset: &i32, x_offset: &i32){
-    window.mv(y_offset - 2, *x_offset);
+fn print_tile_coordinates(window: &mut Window, y_offset: i32, x_offset: i32){
+    window.mv(y_offset - 2, x_offset);
     for i in 0..COLUMNS{
         window.printw(i.to_string());
     }
 
-    window.mv(*y_offset, x_offset - 1);
+    window.mv(y_offset, x_offset - 1);
     for i in 0..ROWS{
-        window.mv((*y_offset) + i, x_offset - 2);
+        window.mv((y_offset) + i as i32, x_offset - 2);
         window.printw(i.to_string());
     }
 }
@@ -139,11 +140,14 @@ fn print_manual(window: &mut Window){
     window.printw("hi");
 }   
 
-fn get_tile_from_coordinates(tiles: &Vec<Tile>, y: &i32, x: &i32) -> Option<Tile>{
-    let index = (y * COLUMNS + x) as usize;
-    match tiles[index]{
-        Some(Tile) => Some(tiles[index])
-    }
+fn get_tile_from_coordinates(tiles: &Vec<Tile>, y: i32, x: i32) -> Option<&Tile>{
+    if x < 0 || y < 0 { return None; }
+
+    let index = y as usize * COLUMNS + x as usize;
+
+    if let Some(tile) = tiles.get(index){
+        Some(tile)
+    } else { None }
 }
 
 fn main() {
@@ -167,8 +171,8 @@ fn main() {
         window.mv(0, 0);
         print_manual(&mut window);
 
-        print_tiles(&tiles, &mut window, &y_offset, &x_offset);
-        print_tile_coordinates(&mut window, &y_offset, &x_offset);
+        print_tiles(&tiles, &mut window, y_offset, x_offset);
+        print_tile_coordinates(&mut window, y_offset, x_offset);
 
         window.mvprintw(30, 30, &str_for_debugging);
 
@@ -178,7 +182,7 @@ fn main() {
             }
 
             Some(InputType::Mouse(y, x)) => {
-                let result: TileClickResult = get_tile_from_coordinates(&tiles, &y, &x);
+                let result: TileClickResult = get_tile_from_coordinates(&tiles, y, x).get_clicked();
             }
 
             Some(InputType::Quit) => break,
