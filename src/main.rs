@@ -178,10 +178,9 @@ fn main() {
             }
 
             Some(InputType::Mouse(y, x)) => {
-                match get_tile_from_coordinates(&tiles, y, x, y_offset, x_offset){
-                    Some(tile) => str_for_debugging = tile.get_symbol().to_string(),
-                    None => str_for_debugging = String::from("UGHH")
-                }
+                if let Some(tile) = get_tile_from_coordinates(&tiles, y, x, y_offset, x_offset){
+                    str_for_debugging = tile.get_symbol().to_string()
+                } else { str_for_debugging = String::from("NO"); }
             }
 
             Some(InputType::Quit) => break,
