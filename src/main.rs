@@ -8,7 +8,7 @@ const COLUMNS: usize = 5;
 const CONCEALED_TILE_SYMBOL: char = 'c';
 const BOMB_TILE_SYMBOL: char = 'b';
 const EMPTY_TILE_SYMBOL: char = 'e';
-const DEBUG_COORDINATES: (u32, u32) = (0, 30);
+const DEBUG_COORDINATES: (u32, u32) = (30, 30);
 
 enum TileType{
     Bomb,
@@ -140,14 +140,10 @@ fn print_manual(window: &mut Window){
     window.printw("hi");
 }   
 
-fn get_tile_from_coordinates(tiles: &Vec<Tile>, y: i32, x: i32) -> Option<&Tile>{
+fn get_tile_from_coordinates(tiles: &Vec<Tile>, y: i32, x: i32, y_offset: i32, x_offset: i32) -> Option<&Tile>{
     if x < 0 || y < 0 { return None; }
-
-    let index = y as usize * COLUMNS + x as usize;
-
-    if let Some(tile) = tiles.get(index){
-        Some(tile)
-    } else { None }
+    let index = (y - y_offset) as usize * COLUMNS + (x - x_offset) as usize;
+    return Some(tiles.get(index)?);
 }
 
 fn main() {
@@ -182,7 +178,10 @@ fn main() {
             }
 
             Some(InputType::Mouse(y, x)) => {
-                let result: TileClickResult = get_tile_from_coordinates(&tiles, y, x).get_clicked();
+                match get_tile_from_coordinates(&tiles, y, x, y_offset, x_offset){
+                    Some(tile) => str_for_debugging = tile.get_symbol().to_string(),
+                    None => str_for_debugging = String::from("UGHH")
+                }
             }
 
             Some(InputType::Quit) => break,
