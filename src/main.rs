@@ -174,7 +174,7 @@ fn main() {
         print_tiles(&tiles, &mut window, y_offset, x_offset);
         print_tile_coordinates(&mut window, y_offset, x_offset);
 
-        window.mvprintw(30, 30, &str_for_debugging);
+        window.mvprintw(DEBUG_COORDINATES.0 as i32, DEBUG_COORDINATES.1 as i32, &str_for_debugging);
 
         match get_input(&mut window){
             Some(InputType::Character(c)) => {
