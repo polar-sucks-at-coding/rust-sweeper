@@ -13,6 +13,11 @@ enum TileType{
     Bomb,
     Empty
 }
+
+enum TileClickResult{
+    Explode,
+    Safe
+}
 struct Tile{
     position: (i32, i32), // row/y first
     tile_type: TileType,
@@ -25,6 +30,13 @@ impl Tile{
         match self.tile_type{
             TileType::Bomb => { return BOMB_TILE_SYMBOL; },
             TileType::Empty => { return EMPTY_TILE_SYMBOL; }
+        }
+    }
+    
+    fn get_clicked(&self) -> Option<TileClickResult>{
+        match self.tile_type{
+            TileType::Bomb => Some(TileClickResult::Explode),
+            TileType::Empty => Some(TileClickResult::Safe)
         }
     }
 }
@@ -68,11 +80,11 @@ fn print_tiles(tiles: &Vec<Tile>, window: &mut Window, y_offset: &i32, x_offset:
         window.mv(i.position.0 + y_offset, i.position.1 + x_offset);
 
         if i.concealed{
-            window.printw(String::from(CONCEALED_TILE_SYMBOL));
-            return;
+            window.addch(CONCEALED_TILE_SYMBOL);
+            continue;
         }
 
-        window.printw(i.get_symbol().to_string());
+        window.addch(i.get_symbol());
     }
 }
 
@@ -105,7 +117,7 @@ fn get_input(window: &mut Window) -> Option<InputType>{
             Some(Input::KeyDC) => Some(InputType::Quit),
             
             Some(Input::KeyMouse) => {
-                if let Ok(mouse_event) = getmouse() { Some(InputType::Mouse(mouse_event.y, mouse_event.x)) }
+                if let Ok(mouse_event) = getmouse() { Some(InputType::Mouse(mouse_event.y, mouse_event.x)) } 
                 else { None }
             }
 
@@ -127,12 +139,21 @@ fn print_manual(window: &mut Window){
     window.printw("hi");
 }   
 
+fn get_tile_from_coordinates(tiles: &Vec<Tile>, y: &i32, x: &i32) -> Option<Tile>{
+    let index = (y * COLUMNS + x) as usize;
+    match tiles[index]{
+        Some(Tile) => Some(tiles[index])
+    }
+}
+
 fn main() {
     let mut window = initscr();
     window.keypad(true);
     mousemask(ALL_MOUSE_EVENTS, None); //for pancurses to listen to all mouse events
 
-    let tiles = create_tiles();
+    let mut tiles = create_tiles();
+    conceal_all_tiles(&mut tiles);
+
     let y_offset = 10;
     let x_offset = 20;
 
@@ -142,8 +163,8 @@ fn main() {
     loop{
         window.erase();
         
-        //moving into position for the manual
-        window.mv(y_offset - 5, 0);
+
+        window.mv(0, 0);
         print_manual(&mut window);
 
         print_tiles(&tiles, &mut window, &y_offset, &x_offset);
@@ -157,11 +178,7 @@ fn main() {
             }
 
             Some(InputType::Mouse(y, x)) => {
-                let mut stringy_pingy = String::from("Mouse at ");
-                stringy_pingy += &y.to_string()[..];
-                stringy_pingy += " ";
-                stringy_pingy += &x.to_string()[..];
-                str_for_debugging = stringy_pingy;
+                let result: TileClickResult = get_tile_from_coordinates(&tiles, &y, &x);
             }
 
             Some(InputType::Quit) => break,
