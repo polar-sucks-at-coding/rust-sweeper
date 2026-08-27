@@ -107,22 +107,24 @@ enum InputType{
     Character(char),
     Mouse(i32, i32) //y and x coordinates
 }
-fn get_input(window: &mut Window) -> Option<InputType>{
+fn get_input(window: &mut Window) -> Result<InputType, String>{
         match window.getch(){
             Some(Input::Character(c)) => {
                 if c == 'q' { Some(InputType::Quit); }
-                Some(InputType::Character(c))
+                Ok(InputType::Character(c))
             },
 
             //the delete key
-            Some(Input::KeyDC) => Some(InputType::Quit),
+            Some(Input::KeyDC) => Ok(InputType::Quit),
             
             Some(Input::KeyMouse) => {
-                if let Ok(mouse_event) = getmouse() { Some(InputType::Mouse(mouse_event.y, mouse_event.x)) } 
-                else { None }
+                if let Ok(mouse_event) = getmouse(){
+                    Ok(InputType::Mouse(mouse_event.y, mouse_event.x))
+                } else { Err("Got Input::KeyMouse but can't create mouse_event".to_string()) }
+                
             }
 
-            _ => None
+            _ => Err("Error: Invalid input!".to_string())
             
             //Some(input) => { window.addstr(&format!("{:?}", input)); },
             //None => ()
@@ -140,10 +142,18 @@ fn print_manual(window: &mut Window){
     window.printw("hi");
 }   
 
-fn get_tile_from_coordinates(tiles: &Vec<Tile>, y: i32, x: i32, y_offset: i32, x_offset: i32) -> Option<&Tile>{
-    if x < 0 || y < 0 { return None; }
-    let index = (y - y_offset) as usize * COLUMNS + (x - x_offset) as usize;
-    return Some(tiles.get(index)?);
+fn get_tile_from_coordinates(tiles: &Vec<Tile>, y_mouse: i32, x_mouse: i32, y_offset: i32, x_offset: i32) -> Result<&Tile, String>{
+    let max_coordinates = (ROWS as i32 + y_offset, COLUMNS as i32 + x_offset);
+    if x_mouse < x_offset || y_mouse < y_offset  ||  y_mouse > max_coordinates.0 || x_mouse > max_coordinates.1{
+        return Err("Error: x or y out of bounds".to_string());
+    }
+
+    let index = (y_mouse - y_offset) * COLUMNS as i32 + (x_mouse - x_offset);
+
+    match tiles.get(index as usize){
+        Some(tile) => Ok(tile),
+        None => Err("Error: tile not found at index".to_string())
+    }
 }
 
 fn main() {
@@ -171,26 +181,24 @@ fn main() {
         print_tile_coordinates(&mut window, y_offset, x_offset);
 
         window.mvprintw(DEBUG_COORDINATES.0 as i32, DEBUG_COORDINATES.1 as i32, &str_for_debugging);
+        window.refresh();
 
         match get_input(&mut window){
-            Some(InputType::Character(c)) => {
+            Ok(InputType::Character(c)) => {
                 str_for_debugging = c.to_string();
             }
 
-            Some(InputType::Mouse(y, x)) => {
-                if let Some(tile) = get_tile_from_coordinates(&tiles, y, x, y_offset, x_offset){
-                    str_for_debugging = tile.get_symbol().to_string()
-                } else { str_for_debugging = String::from("NO"); }
-            }
+            Ok(InputType::Mouse(y, x)) => {
+                match get_tile_from_coordinates(&tiles, y, x, y_offset, x_offset) {
+                    Ok(tile) => { str_for_debugging = tile.get_symbol().to_string() },
+                    Err(error) => { str_for_debugging = error }
+                    }
+                }
 
-            Some(InputType::Quit) => break,
-            Option::None => {
-                endwin();
-                eprintln!("Invalid Input!");
-                std::process::exit(1);
-            }
-        }
-        window.refresh();
+            Ok(InputType::Quit) => break,
+            
+            Err(error) => str_for_debugging = error
+        }    
     }
     endwin();
 }
