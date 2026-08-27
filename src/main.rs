@@ -1,10 +1,13 @@
 extern crate pancurses;
 
+use std::ops::Add;
+
 use pancurses::{ALL_MOUSE_EVENTS, Input::{self, KeyReference}, Window, endwin, getmouse, initscr, mousemask};
 use rand::Rng;
 
 const ROWS: usize = 5;
 const COLUMNS: usize = 5;
+const QUIT_BUTTON: char = 'q';
 const CONCEALED_TILE_SYMBOL: char = 'c';
 const BOMB_TILE_SYMBOL: char = 'b';
 const EMPTY_TILE_SYMBOL: char = 'e';
@@ -110,18 +113,16 @@ enum InputType{
 fn get_input(window: &mut Window) -> Result<InputType, String>{
         match window.getch(){
             Some(Input::Character(c)) => {
-                if c == 'q' { Some(InputType::Quit); }
-                Ok(InputType::Character(c))
+                match c {
+                    QUIT_BUTTON => Ok(InputType::Quit),
+                    _ => Ok(InputType::Character(c))
+                }
             },
-
-            //the delete key
-            Some(Input::KeyDC) => Ok(InputType::Quit),
             
             Some(Input::KeyMouse) => {
                 if let Ok(mouse_event) = getmouse(){
                     Ok(InputType::Mouse(mouse_event.y, mouse_event.x))
-                } else { Err("Got Input::KeyMouse but can't create mouse_event".to_string()) }
-                
+                } else { Err("Got Input::KeyMouse but can't create mouse_event".to_string()) }   
             }
 
             _ => Err("Error: Invalid input!".to_string())
@@ -139,7 +140,10 @@ fn conceal_all_tiles(tiles: &mut Vec<Tile>){
 
 //wip
 fn print_manual(window: &mut Window){
-    window.printw("hi");
+    let mut to_print = String::from("Click on the tiles or press ");
+    to_print.push(QUIT_BUTTON);
+    to_print.push_str(" to quit.");
+    window.printw(to_print);
 }   
 
 fn get_tile_from_coordinates(tiles: &Vec<Tile>, y_mouse: i32, x_mouse: i32, y_offset: i32, x_offset: i32) -> Result<&Tile, String>{
