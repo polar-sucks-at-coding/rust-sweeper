@@ -266,7 +266,6 @@ fn main() {
     loop{
         window.erase();
         
-
         window.mv(0, 0);
         print_manual(&mut window);
 
