@@ -1,0 +1,9 @@
+pub const ROWS: usize = 10;
+pub const COLUMNS: usize = 10;
+pub const QUIT_BUTTON: char = 'q';
+pub const CONCEALED_TILE_SYMBOL: char = 'c';
+pub const BOMB_TILE_SYMBOL: char = 'b';
+pub const EMPTY_TILE_SYMBOL: char = 'e';
+pub const DEBUG_COORDINATES: (u32, u32) = (30, 30);
+pub const Y_OFFSET: i32 = 10;
+pub const X_OFFSET: i32 = 20;
