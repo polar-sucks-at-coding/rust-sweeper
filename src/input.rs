@@ -1,6 +1,5 @@
 use pancurses::{Window, Input::{self}, getmouse};
 use crate::consts;
-use crate::tile;
 use crate::board;
 
 pub enum InputType{
@@ -32,7 +31,7 @@ pub fn get_input(window: &mut Window) -> Result<InputType, String>{
 }
 
 pub fn handle_mouse_input(board: &board::Board, mouse_y: i32, mouse_x: i32) -> Result<String, String>{
-    match tile::get_tile_from_mouse_coordinates(board, mouse_y, mouse_x){
+    match board.get_tile_from_mouse_coordinates(mouse_y, mouse_x){
         Ok(tile) => {
             match tile.get_surrounding_bomb_count(board){
                 Some(count) => Ok(format!("Surrounding bomb count: {}", count)),

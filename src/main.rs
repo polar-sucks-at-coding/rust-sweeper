@@ -15,9 +15,7 @@ fn main() {
 
     let mut board = board::Board::new(10, 10);
     board.tiles = board.create_tiles();
-    tile::assign_symbols_to_all_tiles(&mut board);
-    
-    //conceal_all_tiles(&mut tiles);
+    board.assign_symbols_to_all_tiles();
 
     let mut str_for_debugging = String::new();
 
@@ -31,7 +29,7 @@ fn main() {
         ui::print_tiles(&board.tiles, &mut window);
         ui::print_tile_coordinates(&mut window, &board);
 
-        let (debug_y, debug_x) = ui::get_debug_coordinates(&board.tiles);
+        let (debug_y, debug_x) = ui::get_debug_coordinates(&board);
         window.mvprintw(debug_y as i32, debug_x as i32, &str_for_debugging);
         window.refresh();
 
