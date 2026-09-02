@@ -2,7 +2,7 @@ use crate::consts;
 use rand::Rng;
 
 #[derive(PartialEq)]
-enum TileType{
+pub enum TileType{
     Bomb,
     Empty
 }

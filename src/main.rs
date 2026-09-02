@@ -1,6 +1,6 @@
 extern crate pancurses;
 
-use pancurses::{ALL_MOUSE_EVENTS, Input::{self, KeyReference}, Window, endwin, getmouse, initscr, mousemask};
+use pancurses::{ALL_MOUSE_EVENTS, endwin, initscr, mousemask};
 
 mod consts;
 mod ui;
@@ -13,10 +13,7 @@ fn main() {
     mousemask(ALL_MOUSE_EVENTS, None); //for pancurses to listen to all mouse events
 
     let mut tiles = tile::create_tiles();
-    {
-        let tiles_ref = &mut tiles;
-        tile::assign_symbols_to_all_tiles(tiles_ref);
-    }
+    tile::assign_symbols_to_all_tiles(&mut tiles);
     
     //conceal_all_tiles(&mut tiles);
 

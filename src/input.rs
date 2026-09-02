@@ -1,4 +1,4 @@
-use pancurses::{Window, Input::{self, KeyReference}, getmouse};
+use pancurses::{Window, Input::{self}, getmouse};
 use crate::consts;
 use crate::tile;
 
