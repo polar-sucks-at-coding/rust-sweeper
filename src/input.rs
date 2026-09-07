@@ -1,6 +1,5 @@
 use pancurses::{Window, Input::{self}, getmouse};
-use crate::{consts, tile};
-use crate::board;
+use crate::{consts, tile, board};
 
 pub enum InputType{
     Quit,
@@ -30,14 +29,23 @@ pub fn get_input(window: &mut Window) -> Result<InputType, String>{
         }
 }
 
-pub fn handle_mouse_input(board: &board::Board, mouse_y: i32, mouse_x: i32) -> Result<String, String>{
-    match board.get_tile_from_mouse_coordinates(mouse_y, mouse_x){
-        Ok(tile) => {
+pub fn handle_mouse_input(board: &mut board::Board, mouse_y: i32, mouse_x: i32) -> Option<String>{
+    let tile_coordinates = board.mouse_coordinates_to_tile_coordinates(mouse_y, mouse_x);
+
+    if let None = tile_coordinates{
+        return Some("Error: Mouse coordinates are out of bounds".to_string());
+    }
+
+    match board.tiles.get(board.get_index_from_coordinates(tile_coordinates.unwrap().0, tile_coordinates.unwrap().1)){
+        Some(tile) => {
             match tile.get_click_result(){
-                tile::ClickResult::Explode => Ok("exploded lmao".to_string()),
-                tile::ClickResult::Safe => Ok("didn't explode".to_string())
+                tile::ClickResult::Explode => Some("exploded lmao".to_string()),
+                tile::ClickResult::Safe => { 
+                    board.reveal_surrounding_tiles(board.get_index_from_coordinates(tile.position.0 as i32, tile.position.1 as i32));
+                    return None;
+                }
             }
         },
-        Err(error) => Err(error)
+        None => Some("Error: No tile found at the given coordinates".to_string())
     }
 }

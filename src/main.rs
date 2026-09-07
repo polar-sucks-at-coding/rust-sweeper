@@ -40,9 +40,9 @@ fn main() {
             }
 
             Ok(input::InputType::Mouse(y, x)) => {
-                match input::handle_mouse_input(&board, y, x){
-                    Ok(str) => str_for_debugging = str,
-                    Err(error) => str_for_debugging = error
+                match input::handle_mouse_input(&mut board, y, x){
+                    Some(str) => str_for_debugging = str,
+                    None => str_for_debugging = "No error".to_string()
                 }
             }
 

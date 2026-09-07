@@ -29,12 +29,12 @@ impl Tile{
         &self.tile_type
     }
 
-    pub fn calculate_symbol(&self, board: &mut board::Board) -> char {
+    pub fn calculate_symbol(&self, board: &board::Board) -> char {
         if self.get_type() == &TileType::Bomb {
             return consts::BOMB_TILE_SYMBOL;
         }
 
-        match board.get_surrounding_bomb_count(self) {
+        match board.get_surrounding_bomb_count(board.get_index_from_coordinates(self.position.0 as i32, self.position.1 as i32)) {
             Some(count) => std::char::from_digit(count as u32, 10)
                 .unwrap_or(consts::EMPTY_TILE_SYMBOL),
             None => consts::EMPTY_TILE_SYMBOL,

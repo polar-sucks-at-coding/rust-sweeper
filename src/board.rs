@@ -10,12 +10,12 @@ pub struct Board{
 
 impl Board{
 
-    pub fn get_surrounding_bomb_count(&mut self, tile: &Tile) -> Option<i32>{
-        let surrounding_tiles = self.get_surrounding_tiles(tile).ok()?;
+    pub fn get_surrounding_bomb_count(&self, tile_index: usize) -> Option<i32>{
+        let surrounding_tiles = self.get_surrounding_tile_indices(tile_index);
         let mut surrounding_bomb_count: i32 = 0;
         
-        for i in surrounding_tiles{
-            if let TileType::Bomb = i.get_type(){
+        for i in surrounding_tiles.unwrap(){
+            if let TileType::Bomb = self.tiles[i].get_type(){
                 surrounding_bomb_count += 1;
             }
         }
@@ -27,8 +27,8 @@ impl Board{
         Some(surrounding_bomb_count)
     }
 
-    pub fn get_surrounding_tiles<'a>(&mut self, tile: &Tile) -> Result<Vec<&mut Tile>, String>{
-        let mut surrounding_tiles: Vec<&mut Tile> = Vec::new();
+    pub fn get_surrounding_tile_indices<'a>(&self, tile_index: usize) -> Result<Vec<usize>, String>{
+        let mut surrounding_tiles: Vec<usize> = Vec::new();
 
         for row in -1..2{
             for column in -1..2{
@@ -36,10 +36,9 @@ impl Board{
                     continue;
                 }
 
-                let coordinates_for_surrounding_tile: (i32, i32) = (tile.position.0 as i32 + row, tile.position.1 as i32 + column);
-                match self.tiles.get(self.get_index_from_coordinates(coordinates_for_surrounding_tile.0, coordinates_for_surrounding_tile.1)){
-                    Ok(tile) => { surrounding_tiles.push(tile); }
-                    _ => {}
+                match self.tiles.get(tile_index){
+                    Some(tile) => surrounding_tiles.push(self.get_index_from_coordinates(tile.position.0 as i32, tile.position.1 as i32)),
+                    None => continue
                 }
             }
         }
@@ -99,7 +98,7 @@ impl Board{
     }
 
     // didn't make this myself but I understand it and it works so I'm keeping it
-    pub fn assign_symbols_to_all_tiles(&self) {
+    pub fn assign_symbols_to_all_tiles(&mut self) {
         let symbols: Vec<char> = self.tiles
             .iter()
             // .map() turns every element of the iterator into something else, in this case a char
@@ -113,18 +112,16 @@ impl Board{
         }
     }
 
-    pub fn get_tile_from_mouse_coordinates(&self, mouse_y: i32, mouse_x: i32) -> Result<&Tile, String>{
+    pub fn mouse_coordinates_to_tile_coordinates(&self, mouse_y: i32, mouse_x: i32) -> Option<(i32, i32)>{
         let max_coordinates = (self.get_rows() as i32 + consts::BOARD_Y_OFFSET, self.get_columns() as i32 + consts::BOARD_X_OFFSET);
         if mouse_x < consts::BOARD_X_OFFSET || mouse_y < consts::BOARD_Y_OFFSET  ||  mouse_y > max_coordinates.0 || mouse_x > max_coordinates.1{
-            return Err("Error: x or y out of bounds".to_string());
+            return None;
         }
 
-        let index = (mouse_y - consts::BOARD_Y_OFFSET) * self.get_columns() as i32 + (mouse_x - consts::BOARD_X_OFFSET);
+        let y = mouse_y - consts::BOARD_Y_OFFSET;
+        let x = mouse_x - consts::BOARD_X_OFFSET;
 
-        match self.tiles.get(index as usize){
-            Some(tile) => Ok(tile),
-            None => Err("Error: tile not found at index".to_string())
-        }
+        Some((y, x))
     }
 
     pub fn conceal_all_tiles(&mut self){
@@ -138,33 +135,11 @@ impl Board{
         index as usize
     }
 
-    pub fn get_surrounding_tiles_from_click(&mut self, tile: &Tile) -> Option<Vec<&Tile>> {
-        if let ClickResult::Explode = tile.get_click_result(){
-            return None;
-        }      
-
-        let mut surrounding_tiles = Vec::<&Tile>::new();
-        for t in self.get_surrounding_tiles(&tile).unwrap().iter(){
-            surrounding_tiles.push(*t);
-        }
-
-        let mut tiles_to_reveal = Vec::<&Tile>::new();
-
-        for t in &mut surrounding_tiles{
-            if t.get_click_result() == ClickResult::Explode{
-                continue;
-            }
-
-            tiles_to_reveal.push(*t);
-        }
-
-        if tiles_to_reveal.len() > 0 {
-            return Some(tiles_to_reveal);
-        }
-
-        None
+    pub fn reveal_surrounding_tiles(&mut self, tile_index: usize){
+        let surrounding_indices = self.get_surrounding_tile_indices(tile_index).ok().unwrap();
+        
     }
-
+    
     pub fn reveal_tiles(&self, tiles: &mut Vec<&mut Tile>){
         for t in tiles.iter_mut(){
             (*t).concealed = false;
@@ -175,10 +150,5 @@ impl Board{
         self.tiles.get(self.columns / 2 + (self.rows * self.columns) / 2).unwrap()
     }
 
-    pub fn reveal_first_tiles(&mut self){
-        for t in self.get_surrounding_tiles(self.get_middle_tile()) {
-
-        }
-    }
 }
 
