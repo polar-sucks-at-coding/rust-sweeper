@@ -39,8 +39,8 @@ fn main() {
                 str_for_debugging = c.to_string();
             }
 
-            Ok(input::InputType::Mouse(y, x)) => {
-                match input::handle_mouse_input(&mut board, y, x){
+            Ok(input::InputType::Mouse(mouse_y, mouse_x)) => {
+                match input::handle_mouse_input(&mut board, mouse_y, mouse_x){
                     Some(str) => str_for_debugging = str,
                     None => str_for_debugging = "No error".to_string()
                 }

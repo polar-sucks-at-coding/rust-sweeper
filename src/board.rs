@@ -1,5 +1,5 @@
-use crate::tile::{ClickResult, Tile, TileType};
-use crate::consts;
+use crate::tile::{Tile, TileType};
+use crate::consts::{self, EMPTY_TILE_SYMBOL};
 use rand::Rng;
 
 pub struct Board{
@@ -37,7 +37,12 @@ impl Board{
                 }
 
                 match self.tiles.get(tile_index){
-                    Some(tile) => surrounding_tiles.push(self.get_index_from_coordinates(tile.position.0 as i32, tile.position.1 as i32)),
+                    Some(tile) => {
+                        let index = self.get_index_from_coordinates(tile.position.0 as i32 + row, tile.position.1 as i32 + column) as i32;
+                        if index < 0 || index as usize >= self.tiles.len() { continue; }
+
+                        surrounding_tiles.push(index as usize);
+                    }
                     None => continue
                 }
             }
@@ -112,18 +117,6 @@ impl Board{
         }
     }
 
-    pub fn mouse_coordinates_to_tile_coordinates(&self, mouse_y: i32, mouse_x: i32) -> Option<(i32, i32)>{
-        let max_coordinates = (self.get_rows() as i32 + consts::BOARD_Y_OFFSET, self.get_columns() as i32 + consts::BOARD_X_OFFSET);
-        if mouse_x < consts::BOARD_X_OFFSET || mouse_y < consts::BOARD_Y_OFFSET  ||  mouse_y > max_coordinates.0 || mouse_x > max_coordinates.1{
-            return None;
-        }
-
-        let y = mouse_y - consts::BOARD_Y_OFFSET;
-        let x = mouse_x - consts::BOARD_X_OFFSET;
-
-        Some((y, x))
-    }
-
     pub fn conceal_all_tiles(&mut self){
         for tile in &mut self.tiles{
             tile.concealed = true;
@@ -135,14 +128,37 @@ impl Board{
         index as usize
     }
 
-    pub fn reveal_surrounding_tiles(&mut self, tile_index: usize){
+    pub fn reveal_surrounding_tiles(&mut self, tile_index: usize, reveal_self: bool){
         let surrounding_indices = self.get_surrounding_tile_indices(tile_index).ok().unwrap();
         
+        if reveal_self { self.reveal_tiles(&vec![tile_index]);}
+
+        self.reveal_tiles(&surrounding_indices);
     }
     
-    pub fn reveal_tiles(&self, tiles: &mut Vec<&mut Tile>){
-        for t in tiles.iter_mut(){
-            (*t).concealed = false;
+    pub fn reveal_tiles_random(&mut self, tile_index: usize){
+        let mut to_reveal: Vec<usize> = Vec::new();
+        
+    }
+
+    pub fn empty_tiles(&mut self, tiles: &Vec<usize>){
+        for i in tiles.iter(){
+            match self.tiles.get_mut(*i){
+                Some(tile) => tile.symbol = EMPTY_TILE_SYMBOL,
+                None => { continue; }
+            }
+        }
+    }
+
+    pub fn reveal_tiles(&mut self, tiles: &Vec<usize>){
+        for t in tiles.iter(){
+            match self.tiles.get_mut(*t){
+                Some(tile) => {
+                    if tile.tile_type == TileType::Bomb { continue; }
+                    tile.concealed = false;
+                }
+                None => { continue; }
+            }
         }
     }
 

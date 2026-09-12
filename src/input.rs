@@ -7,6 +7,19 @@ pub enum InputType{
     Mouse(i32, i32) //y and x coordinates
 }
 
+pub fn mouse_coordinates_to_tile_coordinates(board: &board::Board, mouse_y: i32, mouse_x: i32) -> Option<(i32, i32)>{
+    let max_coordinates = (board.get_rows() as i32 + consts::BOARD_Y_OFFSET, board.get_columns() as i32 + consts::BOARD_X_OFFSET);
+    if mouse_x < consts::BOARD_X_OFFSET || mouse_y < consts::BOARD_Y_OFFSET  ||  mouse_y > max_coordinates.0 || mouse_x > max_coordinates.1{
+        return None;
+    }
+
+    let y = mouse_y - consts::BOARD_Y_OFFSET;
+    let x = mouse_x - consts::BOARD_X_OFFSET;
+
+    Some((y, x))
+}
+
+
 pub fn get_input(window: &mut Window) -> Result<InputType, String>{
         match window.getch(){
             Some(Input::Character(c)) => {
@@ -30,7 +43,7 @@ pub fn get_input(window: &mut Window) -> Result<InputType, String>{
 }
 
 pub fn handle_mouse_input(board: &mut board::Board, mouse_y: i32, mouse_x: i32) -> Option<String>{
-    let tile_coordinates = board.mouse_coordinates_to_tile_coordinates(mouse_y, mouse_x);
+    let tile_coordinates = mouse_coordinates_to_tile_coordinates(board, mouse_y, mouse_x);
 
     if let None = tile_coordinates{
         return Some("Error: Mouse coordinates are out of bounds".to_string());
@@ -40,8 +53,10 @@ pub fn handle_mouse_input(board: &mut board::Board, mouse_y: i32, mouse_x: i32) 
         Some(tile) => {
             match tile.get_click_result(){
                 tile::ClickResult::Explode => Some("exploded lmao".to_string()),
-                tile::ClickResult::Safe => { 
-                    board.reveal_surrounding_tiles(board.get_index_from_coordinates(tile.position.0 as i32, tile.position.1 as i32));
+                tile::ClickResult::Safe => {
+                    let tile_index = board.get_index_from_coordinates(tile.position.0 as i32, tile.position.1 as i32);
+                    board.reveal_surrounding_tiles(tile_index, true);
+                    board.empty_tiles(&vec![tile_index]);
                     return None;
                 }
             }
