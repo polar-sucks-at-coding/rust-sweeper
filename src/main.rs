@@ -2,7 +2,7 @@ extern crate pancurses;
 
 use pancurses::{ALL_MOUSE_EVENTS, endwin, initscr, mousemask};
 
-mod gamestate;
+mod gamestate; 
 mod consts;
 mod ui;
 mod tile;
