@@ -55,8 +55,7 @@ pub fn handle_mouse_input(board: &mut board::Board, mouse_y: i32, mouse_x: i32) 
                 tile::ClickResult::Explode => Some("exploded lmao".to_string()),
                 tile::ClickResult::Safe => {
                     let tile_index = board.get_index_from_coordinates(tile.position.0 as i32, tile.position.1 as i32);
-                    board.reveal_surrounding_tiles(tile_index, true);
-                    board.empty_tiles(&vec![tile_index]);
+                    
                     return None;
                 }
             }

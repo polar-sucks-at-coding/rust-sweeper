@@ -13,6 +13,7 @@ pub enum ClickResult{
     Safe
 }
 
+#[derive(PartialEq)]
 pub struct Tile{
     pub position: (usize, usize), // row/y first
     pub tile_type: TileType,

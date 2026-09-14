@@ -27,7 +27,7 @@ impl Board{
         Some(surrounding_bomb_count)
     }
 
-    pub fn get_surrounding_tile_indices<'a>(&self, tile_index: usize) -> Result<Vec<usize>, String>{
+    pub fn get_surrounding_tile_indices(&self, tile_index: usize) -> Option<Vec<usize>>{
         let mut surrounding_tiles: Vec<usize> = Vec::new();
 
         for row in -1..2{
@@ -48,11 +48,9 @@ impl Board{
             }
         }
 
-        if surrounding_tiles.is_empty(){
-            return Err("Error: No surrounding tiles found".to_string());
-        }
+        if surrounding_tiles.is_empty(){ return None; }
 
-        Ok(surrounding_tiles)
+        Some(surrounding_tiles)
     }
 
     pub fn create_tiles(&self) -> Vec<Tile>{
@@ -127,44 +125,5 @@ impl Board{
         let index = y * self.columns as i32 + x;
         index as usize
     }
-
-    pub fn reveal_surrounding_tiles(&mut self, tile_index: usize, reveal_self: bool){
-        let surrounding_indices = self.get_surrounding_tile_indices(tile_index).ok().unwrap();
-        
-        if reveal_self { self.reveal_tiles(&vec![tile_index]);}
-
-        self.reveal_tiles(&surrounding_indices);
-    }
-    
-    pub fn reveal_tiles_random(&mut self, tile_index: usize){
-        let mut to_reveal: Vec<usize> = Vec::new();
-        
-    }
-
-    pub fn empty_tiles(&mut self, tiles: &Vec<usize>){
-        for i in tiles.iter(){
-            match self.tiles.get_mut(*i){
-                Some(tile) => tile.symbol = EMPTY_TILE_SYMBOL,
-                None => { continue; }
-            }
-        }
-    }
-
-    pub fn reveal_tiles(&mut self, tiles: &Vec<usize>){
-        for t in tiles.iter(){
-            match self.tiles.get_mut(*t){
-                Some(tile) => {
-                    if tile.tile_type == TileType::Bomb { continue; }
-                    tile.concealed = false;
-                }
-                None => { continue; }
-            }
-        }
-    }
-
-    fn get_middle_tile(&mut self) -> &Tile{
-        self.tiles.get(self.columns / 2 + (self.rows * self.columns) / 2).unwrap()
-    }
-
 }
 
