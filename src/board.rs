@@ -53,38 +53,34 @@ impl Board{
         Some(surrounding_tiles)
     }
 
-    pub fn create_tiles(&self) -> Vec<Tile>{
+    pub fn create_tiles(&self) -> Result<Vec<Tile>, String>{
         let mut v: Vec<Tile> = Vec::new();
 
-        let mut row: usize = 0;
-        let mut column: usize = 0;
-        loop{
-            let mut tile = Tile{
-                position: (row, column),
-                tile_type: TileType::Empty,
-                concealed: false,
-                symbol: consts::EMPTY_TILE_SYMBOL //temporary, will be assigned later
-            };
 
-            if (rand::thread_rng().gen_range(0..5)) == 1{
-                tile.tile_type = TileType::Bomb;
-            }
+        for row in 0..self.get_rows(){
+            for column in 0..self.get_columns(){
+                let mut tile = Tile{
+                    position: (row, column),
+                    tile_type: TileType::Empty,
+                    concealed: false,
+                    symbol: consts::EMPTY_TILE_SYMBOL //temporary, will be assigned later
+                };
 
-            tile.position = (row, column);
+                //temporary hardcoded mine chance
+                if (rand::thread_rng().gen_range(0..5)) == 1{
+                    tile.tile_type = TileType::Bomb;
+                }
 
-            v.push(tile);
-
-            if row * column >= (self.rows - 1) * (self.columns - 1){
-                break;
-            }
-
-            column += 1;
-            if column == self.columns{
-                column = 0;
-                row += 1;
+                v.push(tile);
             }
         }
-        v
+
+        if v.len() < 1{
+            return Err("No tiles could be created".to_string());
+        } else {
+            return Ok(v);
+        }
+
     }
     
     pub fn new(rows: usize, columns: usize) -> Board{

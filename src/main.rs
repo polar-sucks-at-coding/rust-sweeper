@@ -1,8 +1,9 @@
 extern crate pancurses;
 
+use std::eprint;
+
 use pancurses::{ALL_MOUSE_EVENTS, endwin, initscr, mousemask};
 
-mod gamestate; 
 mod consts;
 mod ui;
 mod tile;
@@ -15,7 +16,14 @@ fn main() {
     mousemask(ALL_MOUSE_EVENTS, None); //for pancurses to listen to all mouse events
 
     let mut board = board::Board::new(10, 10);
-    board.tiles = board.create_tiles();
+    match board.create_tiles(){
+        Ok(v) => { board.tiles = v; } 
+        Err(error) => {
+            endwin();
+            eprintln!("{error}");
+            std::process::exit(1);
+        }
+    }
     board.assign_symbols_to_all_tiles();
     board.conceal_all_tiles();
 
