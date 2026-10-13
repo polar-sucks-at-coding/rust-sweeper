@@ -121,5 +121,30 @@ impl Board{
         let index = y * self.columns as i32 + x;
         index as usize
     }
+
+    pub fn reveal_tiles(&mut self, indices: &mut Vec<usize>){
+        for t in indices.iter_mut(){
+            if let Some(tile) = self.tiles.get_mut(*t){
+                tile.concealed = false;
+            }   else { continue; }
+        }
+    }
+
+    pub fn get_tiles_to_reveal_from_click(&self, index: usize) -> Vec<usize>{
+        let surrounding_tiles = self.get_surrounding_tile_indices(self.get_index_from_coordinates(y, x)).unwrap();
+        let mut return_v;
+        for t in surrounding_tiles.unwrap().iter(){
+            if let tile = self.tiles.get(*t){
+                if tile.symbol == EMPTY_TILE_SYMBOL{
+                    return_v.push(tile);
+                }
+            } else {
+                continue;
+            }
+        }
+
+        return_v
+    }
+
 }
 

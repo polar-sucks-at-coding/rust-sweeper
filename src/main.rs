@@ -25,7 +25,7 @@ fn main() {
         }
     }
     board.assign_symbols_to_all_tiles();
-    board.conceal_all_tiles();
+    //board.conceal_all_tiles();
 
     let mut str_for_debugging = String::new();
 
