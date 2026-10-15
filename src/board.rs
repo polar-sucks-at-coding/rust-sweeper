@@ -53,7 +53,7 @@ impl Board{
         Some(surrounding_tiles)
     }
 
-    pub fn create_tiles(&self) -> Result<Vec<Tile>, String>{
+    pub fn create_tiles(&mut self) -> Result<Vec<Tile>, String>{
         let mut v: Vec<Tile> = Vec::new();
 
 
@@ -66,6 +66,10 @@ impl Board{
                     symbol: consts::EMPTY_TILE_SYMBOL //temporary, will be assigned later
                 };
 
+                //to add at least one bomb
+                let least_bomb_coordinates = (rand::thread_rng().gen_range(0..self.get_rows()), rand::thread_rng().gen_range(0..self.get_columns()));
+                let least_bomb_index = self.get_index_from_coordinates(least_bomb_coordinates.0 as i32, least_bomb_coordinates.1 as i32);
+                self.tiles.get_mut(least_bomb_index).unwrap().tile_type = TileType::Bomb;
                 //temporary hardcoded mine chance
                 if (rand::thread_rng().gen_range(0..5)) == 1{
                     tile.tile_type = TileType::Bomb;
@@ -77,10 +81,8 @@ impl Board{
 
         if v.len() < 1{
             return Err("No tiles could be created".to_string());
-        } else {
-            return Ok(v);
-        }
-
+        } 
+        return Ok(v);
     }
     
     pub fn new(rows: usize, columns: usize) -> Board{
@@ -130,20 +132,45 @@ impl Board{
         }
     }
 
-    pub fn get_tiles_to_reveal_from_click(&self, index: usize) -> Vec<usize>{
-        let surrounding_tiles = self.get_surrounding_tile_indices(self.get_index_from_coordinates(y, x)).unwrap();
-        let mut return_v;
-        for t in surrounding_tiles.unwrap().iter(){
-            if let tile = self.tiles.get(*t){
-                if tile.symbol == EMPTY_TILE_SYMBOL{
-                    return_v.push(tile);
+    fn get_surrounding_empty_indices(&self, middle_tile_index: usize) -> Option<Vec<usize>>{
+        let mut v = Vec::new();
+
+        if let Some(surrounding) = self.get_surrounding_tile_indices(middle_tile_index){
+            for t in surrounding.iter(){
+                if let Some(tile) = self.tiles.get(*t){
+                    if *tile.get_symbol() == EMPTY_TILE_SYMBOL { v.push(*t); }
                 }
-            } else {
-                continue;
+            }
+        }
+        if v.len() > 0 {
+            return Some(v);
+        } else {
+            return None;
+        }
+    }
+
+    pub fn get_tiles_to_reveal_from_click(&self, index: usize) -> Option<Vec<usize>>{
+        if let Some(tile) = self.tiles.get(index){
+            if *tile.get_symbol() != EMPTY_TILE_SYMBOL { return None; }
+        }
+        let mut to_reveal = Vec::new();
+
+        to_reveal.push(index);
+        
+        loop{
+            let mut at_last = false;
+            if let Some(empties) = self.get_surrounding_empty_indices(index){
+                for i in empties.iter(){
+                    to_reveal.push(*i);
+                    if empties.get(empties.len() - 1) == Some(i){
+                        at_last = true;
+                    }
+                }
             }
         }
 
-        return_v
+
+        Some(to_reveal)
     }
 
 }
